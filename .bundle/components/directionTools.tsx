@@ -111,7 +111,7 @@ const DirectionTool: React.FC<DirectionToolProps> = ({ onMapPressEvent }) => {
 const styles = StyleSheet.create({
   controlPanel: {
     position: 'absolute',
-    top: 50,
+    top: 110,
     right: 10,
     zIndex: 10,
   },
