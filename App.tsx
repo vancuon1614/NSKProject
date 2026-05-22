@@ -25,6 +25,11 @@ const INITIAL_VIEW_STATE = {
 // Giới hạn bản đồ trong khu vực Việt Nam (bao gồm cả đất liền, biển và các quần đảo Hoàng Sa, Trường Sa)
 const VIETNAM_BOUNDS = [100.0, 5.0, 120.0, 25.5] as [number, number, number, number];
 
+export interface MapClick {
+  coordinate: [number, number];
+  timestamp: number;
+}
+
 const App = () => {
   // Ref cho Map và Camera để điều khiển bản đồ
   const mapRef = useRef<MapRef>(null);
@@ -33,12 +38,12 @@ const App = () => {
   // State lưu công cụ đang hoạt động: null (chế độ xem bản đồ thường), 'direction', 'ruler', 'polygon'
   const [activeTool, setActiveTool] = useState<'direction' | 'ruler' | 'polygon' | null>(null);
 
-  // State lưu sự kiện onPress để truyền cho các tool
-  const [mapPressEvent, setMapPressEvent] = useState<NativeSyntheticEvent<PressEvent> | null>(null);
+  // State lưu tọa độ click mới nhất để truyền cho các tool
+  const [lastClick, setLastClick] = useState<MapClick | null>(null);
 
   const handleSelectTool = (tool: 'direction' | 'ruler' | 'polygon' | null) => {
     setActiveTool(tool);
-    setMapPressEvent(null); // Reset click event để tránh kích hoạt công cụ mới lập tức
+    setLastClick(null); // Reset click event để tránh kích hoạt công cụ mới lập tức
   };
 
   const handleZoomIn = async () => {
@@ -66,8 +71,14 @@ const App = () => {
   const handleMapPress = (
     event: NativeSyntheticEvent<PressEvent>,
   ) => {
-    // Chuyển tiếp sự kiện onPress cho các tool đang active
-    setMapPressEvent(event);
+    const coords = event.nativeEvent?.lngLat;
+    if (coords) {
+      // Bóc tách tọa độ lập tức và đóng gói cùng timestamp
+      setLastClick({
+        coordinate: [coords[0], coords[1]],
+        timestamp: Date.now(),
+      });
+    }
   };
 
   return (
@@ -121,15 +132,15 @@ const App = () => {
 
           {/* Render công cụ tương ứng với lựa chọn hiện tại */}
           {activeTool === 'direction' && (
-            <DirectionTool onMapPressEvent={mapPressEvent} />
+            <DirectionTool lastClick={lastClick} />
           )}
 
           {activeTool === 'ruler' && (
-            <RulerTool onMapPressEvent={mapPressEvent} />
+            <RulerTool lastClick={lastClick} />
           )}
 
           {activeTool === 'polygon' && (
-            <PolygonTool isActive={true} onMapPressEvent={mapPressEvent} />
+            <PolygonTool isActive={true} lastClick={lastClick} />
           )}
         </Map>
 

@@ -2,29 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { GeoJSONSource, Layer } from '@maplibre/maplibre-react-native';
 import * as turf from '@turf/turf';
-import type { NativeSyntheticEvent } from 'react-native';
-import type { PressEvent } from '@maplibre/maplibre-react-native';
-
-/**
- * RulerTool - Công cụ đo khoảng cách trên bản đồ.
- *
- * Component này phải được render BÊN TRONG <Map>.
- * Parent cần truyền sự kiện onPress của Map vào prop `onMapPressEvent`.
- *
- * Ví dụ sử dụng trong App.tsx:
- * ```tsx
- * <Map onPress={(e) => setMapPressEvent(e)}>
- *   <Camera initialViewState={{ zoom: 5, center: [105.8342, 21.0278] }} />
- *   <RulerTool onMapPressEvent={mapPressEvent} />
- * </Map>
- * ```
- */
 
 interface RulerToolProps {
-  onMapPressEvent?: NativeSyntheticEvent<PressEvent> | null;
+  lastClick?: { coordinate: [number, number]; timestamp: number } | null;
 }
 
-const RulerTool: React.FC<RulerToolProps> = ({ onMapPressEvent }) => {
+const RulerTool: React.FC<RulerToolProps> = ({ lastClick }) => {
   // State lưu trữ mảng các tọa độ người dùng đã chấm
   const [coordinates, setCoordinates] = useState<number[][]>([]);
   // State lưu trữ tổng khoảng cách
@@ -32,10 +15,9 @@ const RulerTool: React.FC<RulerToolProps> = ({ onMapPressEvent }) => {
 
   // Xử lý sự kiện chạm bản đồ từ parent
   useEffect(() => {
-    if (!onMapPressEvent) return;
+    if (!lastClick) return;
 
-    // Lấy tọa độ từ event theo đúng API v11
-    const newPoint = onMapPressEvent.nativeEvent.lngLat;
+    const newPoint = lastClick.coordinate;
 
     setCoordinates(prev => {
       const newCoordinates = [...prev, newPoint];
@@ -49,7 +31,7 @@ const RulerTool: React.FC<RulerToolProps> = ({ onMapPressEvent }) => {
 
       return newCoordinates;
     });
-  }, [onMapPressEvent]);
+  }, [lastClick]);
 
   // Hàm reset thước đo
   const clearRuler = useCallback(() => {

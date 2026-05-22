@@ -2,39 +2,22 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { GeoJSONSource, Layer, Marker } from '@maplibre/maplibre-react-native';
 import * as turf from '@turf/turf';
-import type { NativeSyntheticEvent } from 'react-native';
-import type { PressEvent } from '@maplibre/maplibre-react-native';
-
-/**
- * PolygonTool - Công cụ vẽ đa giác và tính diện tích trên bản đồ.
- *
- * Component này phải được render BÊN TRONG <Map>.
- * Parent cần truyền sự kiện onPress của Map vào prop `onMapPressEvent`.
- *
- * Ví dụ sử dụng trong App.tsx:
- * ```tsx
- * <Map onPress={(e) => setMapPressEvent(e)}>
- *   <PolygonTool isActive={true} onMapPressEvent={mapPressEvent} />
- * </Map>
- * ```
- */
 
 interface PolygonToolProps {
   isActive: boolean; // Prop để App.tsx quyết định khi nào bật tính năng này
-  onMapPressEvent?: NativeSyntheticEvent<PressEvent> | null;
+  lastClick?: { coordinate: [number, number]; timestamp: number } | null;
 }
 
-const PolygonTool: React.FC<PolygonToolProps> = ({ isActive, onMapPressEvent }) => {
+const PolygonTool: React.FC<PolygonToolProps> = ({ isActive, lastClick }) => {
   const [coordinates, setCoordinates] = useState<[number, number][]>([]);
 
   // Xử lý sự kiện chạm bản đồ từ parent
   useEffect(() => {
-    if (!isActive || !onMapPressEvent) return;
+    if (!isActive || !lastClick) return;
 
-    // Lấy tọa độ từ event theo đúng API v11
-    const coords = onMapPressEvent.nativeEvent.lngLat;
+    const coords = lastClick.coordinate;
     setCoordinates(prev => [...prev, coords]);
-  }, [onMapPressEvent, isActive]);
+  }, [lastClick, isActive]);
 
   // Tính toán vùng, diện tích và tâm đa giác
   const polygonData = useMemo(() => {

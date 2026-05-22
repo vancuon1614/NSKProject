@@ -1,25 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { GeoJSONSource, Layer, Marker } from '@maplibre/maplibre-react-native';
 import { View, Button, StyleSheet } from 'react-native';
-import type { NativeSyntheticEvent } from 'react-native';
-import type { PressEvent } from '@maplibre/maplibre-react-native';
-/**
- * DirectionTool - Công cụ chỉ đường giữa 2 điểm trên bản đồ.
- *
- * Component này phải được render BÊN TRONG <Map>.
- * Parent cần truyền sự kiện onPress của Map vào prop `onMapPressEvent`.
- *
- * Ví dụ sử dụng trong App.tsx:
- * ```tsx
- * <Map onPress={(e) => setMapPressEvent(e)}>
- *   <DirectionTool onMapPressEvent={mapPressEvent} />
- * </Map>
- * ```
- */
+
 interface DirectionToolProps {
-  onMapPressEvent?: NativeSyntheticEvent<PressEvent> | null;
+  lastClick?: { coordinate: [number, number]; timestamp: number } | null;
 }
-const DirectionTool: React.FC<DirectionToolProps> = ({ onMapPressEvent }) => {
+const DirectionTool: React.FC<DirectionToolProps> = ({ lastClick }) => {
   const [origin, setOrigin] = useState<[number, number] | null>(null);
   const [destination, setDestination] = useState<[number, number] | null>(null);
   const [routeData, setRouteData] = useState<any>(null);
@@ -49,15 +35,14 @@ const DirectionTool: React.FC<DirectionToolProps> = ({ onMapPressEvent }) => {
   };
   // Xử lý sự kiện chạm bản đồ từ parent
   useEffect(() => {
-    if (!onMapPressEvent) return;
-    // Lấy tọa độ từ event theo đúng API v11
-    const coords = onMapPressEvent.nativeEvent.lngLat;
+    if (!lastClick) return;
+    const coords = lastClick.coordinate;
     if (!origin) {
       setOrigin(coords);
     } else if (!destination) {
       setDestination(coords);
     }
-  }, [onMapPressEvent]);
+  }, [lastClick]);
   // Lắng nghe sự thay đổi của 2 điểm để tự động gọi API
   useEffect(() => {
     if (origin && destination) {
