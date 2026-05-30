@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Keyboard } from 'react-native';
 import type { NativeSyntheticEvent } from 'react-native';
 // Import theo đúng API v11
 import { Map, Camera } from '@maplibre/maplibre-react-native';
@@ -40,6 +40,17 @@ const App = () => {
 
   // State lưu tọa độ click mới nhất để truyền cho các tool
   const [lastClick, setLastClick] = useState<MapClick | null>(null);
+
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  React.useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const handleSelectTool = (tool: 'direction' | 'ruler' | 'polygon' | null) => {
     setActiveTool(tool);
@@ -85,35 +96,37 @@ const App = () => {
     <View style={styles.page}>
       <View style={styles.container}>
         {/* Floating Toolbar ở phía trên bản đồ */}
-        <View style={styles.toolbar}>
-          <TouchableOpacity
-            style={[styles.toolButton, activeTool === null && styles.activeToolButton]}
-            onPress={() => handleSelectTool(null)}
-          >
-            <Text style={[styles.toolText, activeTool === null && styles.activeToolText]}>👁️ Xem</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[styles.toolButton, activeTool === 'direction' && styles.activeToolButton]}
-            onPress={() => handleSelectTool('direction')}
-          >
-            <Text style={[styles.toolText, activeTool === 'direction' && styles.activeToolText]}>🚗 Chỉ đường</Text>
-          </TouchableOpacity>
+        {!keyboardVisible && (
+          <View style={styles.toolbar}>
+            <TouchableOpacity
+              style={[styles.toolButton, activeTool === null && styles.activeToolButton]}
+              onPress={() => handleSelectTool(null)}
+            >
+              <Text style={[styles.toolText, activeTool === null && styles.activeToolText]}>👁️ Xem</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.toolButton, activeTool === 'direction' && styles.activeToolButton]}
+              onPress={() => handleSelectTool('direction')}
+            >
+              <Text style={[styles.toolText, activeTool === 'direction' && styles.activeToolText]}>🚗 Chỉ đường</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.toolButton, activeTool === 'ruler' && styles.activeToolButton]}
-            onPress={() => handleSelectTool('ruler')}
-          >
-            <Text style={[styles.toolText, activeTool === 'ruler' && styles.activeToolText]}>📐 Thước đo</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.toolButton, activeTool === 'ruler' && styles.activeToolButton]}
+              onPress={() => handleSelectTool('ruler')}
+            >
+              <Text style={[styles.toolText, activeTool === 'ruler' && styles.activeToolText]}>📐 Thước đo</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.toolButton, activeTool === 'polygon' && styles.activeToolButton]}
-            onPress={() => handleSelectTool('polygon')}
-          >
-            <Text style={[styles.toolText, activeTool === 'polygon' && styles.activeToolText]}>⬡ Diện tích</Text>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              style={[styles.toolButton, activeTool === 'polygon' && styles.activeToolButton]}
+              onPress={() => handleSelectTool('polygon')}
+            >
+              <Text style={[styles.toolText, activeTool === 'polygon' && styles.activeToolText]}>⬡ Diện tích</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         <Map
           ref={mapRef}
@@ -166,7 +179,7 @@ const styles = StyleSheet.create({
   },
   toolbar: {
     position: 'absolute',
-    top: 50,
+    top: 70,
     left: 10,
     right: 10,
     flexDirection: 'row',
